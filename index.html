@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Traitement Métal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+<style>
+body {
+  font-family: sans-serif;
+  background: #0d0d1a;
+  color: white;
+  padding: 20px;
+}
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+}
+button {
+  padding: 10px;
+  margin-top: 10px;
+  width: 100%;
+  background: #ffc832;
+  border: none;
+}
+.bag {
+  border: 1px solid #555;
+  padding: 10px;
+  margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Traitement Métal</h2>
+
+<!-- MATIERE LIBRE -->
+<input id="matiere" placeholder="Matière (libre)">
+
+<input id="poids_brut" type="number" placeholder="Poids brut (kg)">
+<input id="tare" type="number" placeholder="Tare (kg)">
+<input id="poids_broyage" type="number" placeholder="Après broyage (kg)">
+<input id="huile_broyage" type="number" placeholder="Huile perdue broyage (kg)">
+<input id="eau_broyage" type="number" placeholder="Eau perdue broyage (kg)">
+<input id="poids_degraissage" type="number" placeholder="Après dégraissage (kg)">
+<input id="huile_degraissage" type="number" placeholder="Huile perdue dégraissage (kg)">
+
+<h3>Big Bags</h3>
+<div id="bags"></div>
+
+<button onclick="addBag()">+ Ajouter Big Bag</button>
+<button onclick="generate()">📥 Générer Excel</button>
+
+<script>
+let bags = [];
+
+function addBag() {
+  bags.push({ bon: "", poids: "" });
+  renderBags();
+}
+
+function renderBags() {
+  const container = document.getElementById("bags");
+  container.innerHTML = "";
+
+  bags.forEach((b, i) => {
+    container.innerHTML += `
+      <div class="bag">
+        <input placeholder="N° Bon d'entrée" value="${b.bon}" onchange="updateBag(${i}, 'bon', this.value)">
+        <input type="number" placeholder="Poids (kg)" value="${b.poids}" onchange="updateBag(${i}, 'poids', this.value)">
+        <button onclick="removeBag(${i})">Supprimer</button>
+      </div>
+    `;
+  });
+}
+
+function updateBag(i, field, value) {
+  bags[i][field] = value;
+}
+
+function removeBag(i) {
+  bags.splice(i, 1);
+  renderBags();
+}
+
+function generate() {
+  const matiere = document.getElementById("matiere").value;
+  const brut = parseFloat(document.getElementById("poids_brut").value)||0;
+  const tare = parseFloat(document.getElementById("tare").value)||0;
+  const broyage = parseFloat(document.getElementById("poids_broyage").value)||0;
+  const huileB = parseFloat(document.getElementById("huile_broyage").value)||0;
+  const eauB = parseFloat(document.getElementById("eau_broyage").value)||0;
+  const deg = parseFloat(document.getElementById("poids_degraissage").value)||0;
+  const huileD = parseFloat(document.getElementById("huile_degraissage").value)||0;
+
+  const net = brut - tare;
+  const perte = brut - deg;
+  const totalBags = bags.reduce((s,b)=>s+(parseFloat(b.poids)||0),0);
+
+  const wb = XLSX.utils.book_new();
+
+  const main = [
+    ["FICHE TRAITEMENT"],
+    ["Matière", matiere],
+    ["Poids brut", brut],
+    ["Tare", tare],
+    ["Poids net", net],
+    ["Après broyage", broyage],
+    ["Huile broyage", huileB],
+    ["Eau broyage", eauB],
+    ["Après dégraissage", deg],
+    ["Huile dégraissage", huileD],
+    ["Perte totale", perte],
+    ["Total Big Bags", totalBags]
+  ];
+
+  const ws1 = XLSX.utils.aoa_to_sheet(main);
+  XLSX.utils.book_append_sheet(wb, ws1, "Fiche");
+
+  const bagsSheet = [
+    ["Bon d'entrée", "Poids"],
+    ...bags.map(b => [b.bon, parseFloat(b.poids)||0])
+  ];
+
+  const ws2 = XLSX.utils.aoa_to_sheet(bagsSheet);
+  XLSX.utils.book_append_sheet(wb, ws2, "Big Bags");
+
+  XLSX.writeFile(wb, "traitement_metal.xlsx");
+}
+</script>
+
+</body>
+</html>
