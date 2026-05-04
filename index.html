@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Traitement Métal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<style>
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: linear-gradient(135deg,#0d0d1a,#1a1a2e,#16213e);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.card {
+  width: 90%;
+  max-width: 500px;
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 15px;
+}
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid #ffc832;
+  color: white;
+  border-radius: 8px;
+}
+button {
+  margin-top: 15px;
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: #ffc832;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h2>Traitement Métal</h2>
+
+<select id="matiere">
+<option value="">Matière</option>
+<option>Acier inoxydable</option>
+<option>Aluminium</option>
+<option>Cuivre</option>
+</select>
+
+<input type="number" id="poids_brut" placeholder="Poids brut (kg)">
+<input type="number" id="tare" placeholder="Tare (kg)">
+<input type="number" id="poids_apres" placeholder="Après traitement (kg)">
+
+<button onclick="generate()">Générer Excel</button>
+
+</div>
+
+<script>
+function generate() {
+  const matiere = document.getElementById("matiere").value;
+  const brut = parseFloat(document.getElementById("poids_brut").value)||0;
+  const tare = parseFloat(document.getElementById("tare").value)||0;
+  const apres = parseFloat(document.getElementById("poids_apres").value)||0;
+
+  const net = brut - tare;
+  const perte = brut - apres;
+
+  const wb = XLSX.utils.book_new();
+
+  const data = [
+    ["Fiche traitement métal"],
+    ["Matière", matiere],
+    ["Poids brut", brut],
+    ["Tare", tare],
+    ["Poids net", net],
+    ["Après traitement", apres],
+    ["Perte", perte]
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, "Fiche");
+
+  XLSX.writeFile(wb, "traitement_metal.xlsx");
+}
+</script>
+
+</body>
+</html>
